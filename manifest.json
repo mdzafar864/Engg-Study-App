@@ -1,0 +1,19 @@
+{
+  "name": "Engg Study — Learn, Practice, Succeed",
+  "short_name": "Engg Study",
+  "description": "Pick your branch, semester and subject to jump straight into curated engineering lecture playlists.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f2f5fb",
+  "theme_color": "#16215c",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
