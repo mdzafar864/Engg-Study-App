@@ -8,7 +8,7 @@
  * speeds up/backstops the app shell itself.
  * ------------------------------------------------------------ */
 
-const CACHE_NAME = "engg-study-v1";
+const CACHE_NAME = "engg-study-v2";
 
 const APP_SHELL = [
   "./",
