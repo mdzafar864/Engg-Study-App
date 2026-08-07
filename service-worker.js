@@ -1,22 +1,19 @@
 /**
- * ------------------------------------------------------------
  * service-worker.js — Engg Study
- * Optimized Service Worker
- * ------------------------------------------------------------
  */
 
-const CACHE_NAME = "engg-study-v1.0.1";
+const CACHE_NAME = "engg-study-v1.0.2";
 
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./manifest.json",
   "./css/style.css",
   "./js/data.js",
   "./js/app.js",
   "./assets/logo.png",
   "./assets/icon-192.png",
-  "./assets/icon-512.png",
-  "./manifest.json"
+  "./assets/icon-512.png"
 ];
 
 // Install
@@ -24,9 +21,18 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL);
-    })
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+
+      for (const file of APP_SHELL) {
+        try {
+          await cache.add(file);
+          console.log("Cached:", file);
+        } catch (err) {
+          console.warn("Failed to cache:", file, err);
+        }
+      }
+    })()
   );
 });
 
@@ -35,9 +41,11 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
       )
     )
   );
@@ -47,46 +55,31 @@ self.addEventListener("activate", (event) => {
 
 // Fetch
 self.addEventListener("fetch", (event) => {
-
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
 
-  // Skip external requests (YouTube, Google Fonts, APIs etc.)
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-
-    caches.match(event.request).then((cachedResponse) => {
-
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
 
       return fetch(event.request)
-        .then((networkResponse) => {
-
-          if (
-            !networkResponse ||
-            networkResponse.status !== 200 ||
-            networkResponse.type !== "basic"
-          ) {
-            return networkResponse;
+        .then((response) => {
+          if (!response || response.status !== 200) {
+            return response;
           }
 
-          const responseClone = networkResponse.clone();
+          const clone = response.clone();
 
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
+            cache.put(event.request, clone);
           });
 
-          return networkResponse;
+          return response;
         })
-
         .catch(() => {
-
           if (event.request.mode === "navigate") {
             return caches.match("./index.html");
           }
@@ -95,11 +88,7 @@ self.addEventListener("fetch", (event) => {
             status: 503,
             statusText: "Offline"
           });
-
         });
-
     })
-
   );
-
 });
