@@ -5,7 +5,7 @@
  * ------------------------------------------------------------
  */
 
-const CACHE_NAME = "engg-study-v1.0.0";
+const CACHE_NAME = "engg-study-v1.0.1";
 
 const APP_SHELL = [
   "./",
