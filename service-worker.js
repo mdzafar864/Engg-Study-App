@@ -1,14 +1,11 @@
 /**
- * service-worker.js — Engg Study
  * ------------------------------------------------------------
- * Caches the app shell (HTML/CSS/JS/logo) so the dropdowns and
- * UI still load offline or on a flaky connection. YouTube
- * playlist embeds always need a live network connection, so
- * video requests are intentionally left untouched — this only
- * speeds up/backstops the app shell itself.
- * ------------------------------------------------------------ */
+ * service-worker.js — Engg Study
+ * Optimized Service Worker
+ * ------------------------------------------------------------
+ */
 
-const CACHE_NAME = "engg-study-v4";
+const CACHE_NAME = "engg-study-v1.0.0";
 
 const APP_SHELL = [
   "./",
@@ -17,18 +14,23 @@ const APP_SHELL = [
   "./js/data.js",
   "./js/app.js",
   "./assets/logo.png",
-  "./assets/icon-512.png",
   "./assets/icon-192.png",
-  "./manifest.json",
+  "./assets/icon-512.png",
+  "./manifest.json"
 ];
 
+// Install
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
   self.skipWaiting();
+
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(APP_SHELL);
+    })
+  );
 });
 
+// Activate
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -39,29 +41,65 @@ self.addEventListener("activate", (event) => {
       )
     )
   );
+
   self.clients.claim();
 });
 
+// Fetch
 self.addEventListener("fetch", (event) => {
+
+  if (event.request.method !== "GET") return;
+
   const url = new URL(event.request.url);
 
-  // Only handle same-origin GET requests for the app shell.
-  // Everything else (YouTube, fonts, etc.) goes straight to the network.
-  if (event.request.method !== "GET" || url.origin !== self.location.origin) {
+  // Skip external requests (YouTube, Google Fonts, APIs etc.)
+  if (url.origin !== self.location.origin) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+
+    caches.match(event.request).then((cachedResponse) => {
+
+      if (cachedResponse) {
+        return cachedResponse;
+      }
 
       return fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
+        .then((networkResponse) => {
+
+          if (
+            !networkResponse ||
+            networkResponse.status !== 200 ||
+            networkResponse.type !== "basic"
+          ) {
+            return networkResponse;
+          }
+
+          const responseClone = networkResponse.clone();
+
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+
+          return networkResponse;
         })
-        .catch(() => cached);
+
+        .catch(() => {
+
+          if (event.request.mode === "navigate") {
+            return caches.match("./index.html");
+          }
+
+          return new Response("Offline", {
+            status: 503,
+            statusText: "Offline"
+          });
+
+        });
+
     })
+
   );
+
 });
