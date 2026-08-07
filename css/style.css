@@ -372,7 +372,51 @@ button:hover { background: var(--navy-800); transform: scale(0.98); }
   color: var(--navy-900);
   font-weight: 500;
 }
+/* Developer Cards */
+.dev-card{
+    background:#f8fafe;
+    border:1px solid #e5edf8;
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:14px;
+}
 
+.dev-card b{
+    display:block;
+    font-size:13px;
+    color:#6b7280;
+    margin-bottom:6px;
+}
+
+.dev-card a,
+.dev-card span{
+    font-size:15px;
+    font-weight:600;
+    color:var(--navy-900);
+    text-decoration:none;
+    word-break:break-word;
+}
+
+.dev-card a:hover{
+    color:var(--gold-600);
+}
+
+/* Developer Role */
+.dev-role{
+    display:block;
+    font-size:15px;
+    font-weight:700;
+    color:#fff;
+    margin-bottom:4px;
+}
+
+.dev-title{
+    display:block;
+    font-size:13px;
+    opacity:.9;
+    color:#dbeafe;
+    line-height:1.5;
+}
 /* YouTube button */
 .youtube-btn {
   display: flex;
