@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://www.engg-study.example.com/sitemap.xml
+Sitemap: https://mdzafar864.github.io/Engg-Study-App//sitemap.xml
