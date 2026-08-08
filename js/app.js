@@ -274,7 +274,7 @@ function updateInstallButton() {
     return;
   }
   if (localStorage.getItem('engg_study_installed') === 'yes') {
-    installBtn.innerHTML = "✅ App Already Installed";
+    installBtn.innerHTML = "✔ App Already Installed, ab app icon se open karein";
     installBtn.style.background = "#16a34a";
     return;
   }
@@ -299,7 +299,7 @@ window.addEventListener('appinstalled', () => {
   // GA4 Event: Track Successful PWA Installation
   trackGAEvent('pwa_installed_success');
 
-  showMessage("✅ App installed. Open it from your home screen icon.", 8000);
+  showMessage("✔ App Successfully Install Ho Gaya Hai. Ab App Icon Se Open Karein.", 8000);
 });
 
 async function installPWA() {
@@ -311,15 +311,15 @@ async function installPWA() {
     return;
   }
   if (installInProgress) {
-    showMessage("⏳ Installing...", 4000);
+    showMessage("⏳ App install ho raha hai...", 4000);
     return;
   }
   if (localStorage.getItem('engg_study_installed') === 'yes' && !deferredPrompt) {
-    showMessage("✅ Already installed. Open it from your home screen icon.", 5000);
+    showMessage("✔ App Already Installed, ab app icon se open karein", 5000);
     return;
   }
   if (!deferredPrompt) {
-    showMessage("ℹ️ Install isn't available right now. Try your browser menu → Add to Home Screen.", 8000);
+    showMessage("ℹ️ Install abhi available nahi hai. Chrome menu (⋮) se Add to Home Screen karein.", 8000);
     return;
   }
   const promptEvent = deferredPrompt;
@@ -330,13 +330,13 @@ async function installPWA() {
   if (choice.outcome === 'accepted') {
     // GA4 Event: Track User Accepted PWA Prompt
     trackGAEvent('pwa_prompt_accepted');
-    installBtn.innerHTML = "⏳ Installing...";
-    showMessage("⏳ Installing the app...", 10000);
+    installBtn.innerHTML = "⏳ App install ho raha hai...";
+    showMessage("⏳ App install ho raha hai...", 10000);
   } else {
     // GA4 Event: Track User Cancelled PWA Prompt
     trackGAEvent('pwa_prompt_cancelled');
     installInProgress = false;
-    showMessage("❌ Install cancelled.", 4000);
+    showMessage("❌ App install cancel ho gaya.", 4000);
     updateInstallButton();
   }
 }
@@ -360,4 +360,4 @@ if ('serviceWorker' in navigator) {
 // INIT
 // ================================================================
 initBranches();
-updateSemesters();      
+updateSemesters();
