@@ -253,7 +253,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ================================================================
-// PWA INSTALL PROMPT
+// PWA INSTALL PROMPT & DEVICE DETECTION
 // ================================================================
 let deferredPrompt = null;
 let installInProgress = false;
@@ -290,6 +290,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   updateInstallButton();
 });
 
+// DETECT WHEN APP IS INSTALLED SUCCESSFULLY ON DEVICE
 window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
   installInProgress = false;
@@ -299,6 +300,7 @@ window.addEventListener('appinstalled', () => {
   // GA4 Event: Track Successful PWA Installation
   trackGAEvent('pwa_installed_success');
 
+  // Device par install successful hone ke baad ka message
   showMessage("✔ App Successfully Install Ho Gaya Hai. Ab App Icon Se Open Karein.", 8000);
 });
 
@@ -307,7 +309,7 @@ async function installPWA() {
   trackGAEvent('click_install_pwa_button');
 
   if (isPWAStandalone()) {
-    showMessage("✅ You're already using the installed app.", 5000);
+    showMessage("✅ App Already Open Hai.", 5000);
     return;
   }
   if (installInProgress) {
@@ -322,11 +324,14 @@ async function installPWA() {
     showMessage("ℹ️ Install abhi available nahi hai. Chrome menu (⋮) se Add to Home Screen karein.", 8000);
     return;
   }
+
   const promptEvent = deferredPrompt;
   deferredPrompt = null;
   installInProgress = true;
+  
   promptEvent.prompt();
   const choice = await promptEvent.userChoice;
+  
   if (choice.outcome === 'accepted') {
     // GA4 Event: Track User Accepted PWA Prompt
     trackGAEvent('pwa_prompt_accepted');
