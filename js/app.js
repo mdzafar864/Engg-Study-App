@@ -1,4 +1,13 @@
 // ================================================================
+// HELPER FUNCTION FOR GA4 EVENT TRACKING
+// ================================================================
+function trackGAEvent(eventName, eventParams = {}) {
+  if (typeof gtag === 'function') {
+    gtag('event', eventName, eventParams);
+  }
+}
+
+// ================================================================
 // DOM REFERENCES
 // ================================================================
 const branchEl = document.getElementById('branch');
@@ -8,7 +17,7 @@ const msgEl = document.getElementById('msg');
 const subjectListEl = document.getElementById('subjectList');
 const subjectBadge = document.getElementById('subjectBadge');
 
-const DEFAULT_MSG = "🔍 Choose branch, semester &amp; subject to view video lectures.";
+const DEFAULT_MSG = "🔍 Choose branch, semester & subject to view video lectures.";
 let hideTimer;
 
 function showMessage(text, duration = 6000) {
@@ -52,6 +61,13 @@ function updateSemesters() {
     return;
   }
 
+  // GA4 Event: Track Branch Selection
+  const branchName = BRANCHES.find((br) => br.id === branch)?.name || branch;
+  trackGAEvent('select_branch', {
+    branch_id: branch,
+    branch_name: branchName
+  });
+
   SEMESTERS.forEach((s) => {
     const opt = document.createElement('option');
     opt.value = String(s);
@@ -78,6 +94,12 @@ function updateSubjectSection() {
     return;
   }
 
+  // GA4 Event: Track Semester Selection
+  trackGAEvent('select_semester', {
+    branch_id: branch,
+    semester: sem
+  });
+
   const subjects = (SUBJECTS[branch] && SUBJECTS[branch][sem]) || [];
 
   if (subjects.length === 0) {
@@ -101,6 +123,23 @@ function updateSubjectSection() {
 
 branchEl.addEventListener('change', updateSemesters);
 semEl.addEventListener('change', updateSubjectSection);
+
+// Track Subject Dropdown Change
+subjectSelect.addEventListener('change', () => {
+  const b = branchEl.value;
+  const s = semEl.value;
+  const subIndex = subjectSelect.value;
+  if (subIndex !== "") {
+    const subject = getPlaylist(b, s, subIndex);
+    if (subject) {
+      trackGAEvent('select_subject', {
+        branch_id: b,
+        semester: s,
+        subject_name: subject.name
+      });
+    }
+  }
+});
 
 // ================================================================
 // OPEN VIDEO PLAYLIST
@@ -133,12 +172,28 @@ document.getElementById('openBtn').onclick = () => {
     return;
   }
 
+  // GA4 Event: Track Watch Video Request
+  trackGAEvent('watch_video_click', {
+    branch: branchName,
+    semester: s,
+    subject: subject.name,
+    playlist_id: subject.playlistId
+  });
+
   const embedUrl = `https://www.youtube.com/embed/videoseries?list=${subject.playlistId}`;
   const watchUrl = `https://www.youtube.com/playlist?list=${subject.playlistId}`;
 
   document.getElementById('videoModalTitle').textContent = `▶️ ${subject.name}`;
   document.getElementById('videoFrame').src = embedUrl;
-  document.getElementById('openYoutubeBtn').onclick = () => window.open(watchUrl, '_blank', 'noopener');
+  
+  document.getElementById('openYoutubeBtn').onclick = () => {
+    // GA4 Event: Track Direct YouTube Link Click from Modal
+    trackGAEvent('open_youtube_external', {
+      subject: subject.name,
+      playlist_id: subject.playlistId
+    });
+    window.open(watchUrl, '_blank', 'noopener');
+  };
 
   document.getElementById('videoModal').style.display = 'flex';
   document.getElementById('videoModal').classList.add('active');
@@ -159,7 +214,7 @@ document.getElementById('videoModal').addEventListener('click', function (e) {
 });
 
 // ================================================================
-// DEVELOPER MODAL
+// DEVELOPER MODAL & LINKS TRACKING
 // ================================================================
 function closeDev() {
   document.getElementById('devModal').classList.remove('active');
@@ -167,12 +222,34 @@ function closeDev() {
 }
 
 document.getElementById('devBtn').onclick = () => {
+  // GA4 Event: Track Developer Info Button Click
+  trackGAEvent('click_developer_info');
+  
   document.getElementById('devModal').style.display = 'flex';
   document.getElementById('devModal').classList.add('active');
 };
 
 document.getElementById('devModal').addEventListener('click', function (e) {
   if (e.target === this) closeDev();
+});
+
+// Attach event listeners for links inside Dev Modal (after DOM loads)
+window.addEventListener('DOMContentLoaded', () => {
+  // Track LinkedIn Link Click
+  const linkedinBtn = document.querySelector('#devModal a[href*="linkedin.com"]');
+  if (linkedinBtn) {
+    linkedinBtn.addEventListener('click', () => {
+      trackGAEvent('click_linkedin_profile');
+    });
+  }
+
+  // Track YouTube Link Click in Dev Modal
+  const youtubeDevBtn = document.querySelector('#devModal a[href*="youtube.com"]');
+  if (youtubeDevBtn) {
+    youtubeDevBtn.addEventListener('click', () => {
+      trackGAEvent('click_youtube_channel_dev');
+    });
+  }
 });
 
 // ================================================================
@@ -218,10 +295,17 @@ window.addEventListener('appinstalled', () => {
   installInProgress = false;
   localStorage.setItem('engg_study_installed', 'yes');
   updateInstallButton();
+  
+  // GA4 Event: Track Successful PWA Installation
+  trackGAEvent('pwa_installed_success');
+
   showMessage("✅ App installed. Open it from your home screen icon.", 8000);
 });
 
 async function installPWA() {
+  // GA4 Event: Track PWA Install Button Click
+  trackGAEvent('click_install_pwa_button');
+
   if (isPWAStandalone()) {
     showMessage("✅ You're already using the installed app.", 5000);
     return;
@@ -244,9 +328,13 @@ async function installPWA() {
   promptEvent.prompt();
   const choice = await promptEvent.userChoice;
   if (choice.outcome === 'accepted') {
+    // GA4 Event: Track User Accepted PWA Prompt
+    trackGAEvent('pwa_prompt_accepted');
     installBtn.innerHTML = "⏳ Installing...";
     showMessage("⏳ Installing the app...", 10000);
   } else {
+    // GA4 Event: Track User Cancelled PWA Prompt
+    trackGAEvent('pwa_prompt_cancelled');
     installInProgress = false;
     showMessage("❌ Install cancelled.", 4000);
     updateInstallButton();
@@ -272,4 +360,4 @@ if ('serviceWorker' in navigator) {
 // INIT
 // ================================================================
 initBranches();
-updateSemesters();
+updateSemesters();      
